@@ -59,37 +59,12 @@ def half_a(a:float) -> float:
 
 
 @pytest.fixture
-def a_third(a:float) -> float:
-    return (1.0/3.0)*a
-
-
-@pytest.fixture
-def a_sixth(a:float) -> float:
-    return (1.0/6.0)*a
-
-
-@pytest.fixture
-def a_twelfth(a:float) -> float:
-    return (1.0/12.0)*a
-
-
-@pytest.fixture
 def half_b(b:float) -> float:
     return 0.5*b
 
 
 @pytest.fixture
-def b_sixth(b:float) -> float:
-    return (1.0/6.0)*b
-
-
-@pytest.fixture
-def half_c(c:float) -> float:
-    return 0.5*c
-
-
-@pytest.fixture
-def gen_case_const(a:float) -> FUNCS:
+def gen_case_const(a:float, half_a:float) -> FUNCS:
     # load -----------------------------
     def load(x:np.ndarray) -> np.ndarray:
         return a * np.ones_like(x)
@@ -100,14 +75,14 @@ def gen_case_const(a:float) -> FUNCS:
 
     # bmd ------------------------------
     def bmd(x:np.ndarray) -> np.ndarray:
-        return (0.5)*a*(x**2)
+        return half_a*(x**2)
     return load, sfd, bmd
 
 
 @pytest.fixture
 def gen_case_linear(
-        a:float, b:float, half_a:float,
-        half_b:float, a_sixth:float
+        a:float, b:float,
+        half_a:float, half_b:float,
     ) -> FUNCS:
     # load -----------------------------
     def load(x:np.ndarray) -> np.ndarray:
@@ -117,6 +92,7 @@ def gen_case_linear(
     def sfd(x:np.ndarray) -> np.ndarray:
         return half_a*(x**2) + b*x
 
+    a_sixth = (1.0/6.0)*a
     # bmd ------------------------------
     def bmd(x:np.ndarray) -> np.ndarray:
         return a_sixth*(x**3) + half_b*(x**2)
@@ -127,16 +103,21 @@ def gen_case_linear(
 @pytest.fixture
 def gen_case_quadratic(
         a:float, b:float, c:float,
-        a_third:float, half_b:float, b_sixth:float,
-        a_twelfth:float, half_c:float
+        half_b:float,
     ) -> FUNCS:
     # load -----------------------------
     def load(x:np.ndarray) -> np.ndarray:
         return a*(x**2) + b*x + c
 
+    a_third = (1.0/3.0)*a
+
     # sfd ------------------------------
     def sfd(x:np.ndarray) -> np.ndarray:
         return a_third*(x**3) + half_b*(x**2) + c*x
+
+    a_twelfth = (1.0/12.0)*a
+    b_sixth = (1.0/6.0)*b
+    half_c = 0.5*c
 
     # bmd ------------------------------
     def bmd(x:np.ndarray) -> np.ndarray:
@@ -155,29 +136,20 @@ def a_bb(a:float, b:float) -> float:
 
 
 @pytest.fixture
-def a_b_cos_c(a_b:float, c:float) -> float:
-    return a_b * np.cos(c)
-
-
-@pytest.fixture
-def a_bb_sin_c(a_bb:float,c:float) -> float:
-    return a_bb * np.sin(c)
-
-
-@pytest.fixture
 def gen_case_sinusoidal(
         a:float, b:float, c:float,
         a_b:float, a_bb:float,
-        a_b_cos_c:float, a_bb_sin_c:float,
     ) -> FUNCS:
     # load -----------------------------
     def load(x:np.ndarray) -> np.ndarray:
         return a*np.sin(b*x + c)
 
+    a_b_cos_c = a_b * np.cos(c)
     # sfd ------------------------------
     def sfd(x:np.ndarray) -> np.ndarray:
         return (a_b_cos_c - a_b*np.cos(b*x + c))
 
+    a_bb_sin_c = a_bb * np.sin(c)
     # bmd ------------------------------
     def bmd(x:np.ndarray) -> np.ndarray:
         return (a_b_cos_c*x + a_bb_sin_c - a_bb*np.sin(b*x + c))
@@ -186,29 +158,20 @@ def gen_case_sinusoidal(
 
 
 @pytest.fixture
-def a_b_exp_c(a_b:float, c:float) -> float:
-    return a_b * np.exp(c)
-
-
-@pytest.fixture
-def a_bb_exp_c(a_bb:float, c:float) -> float:
-    return a_bb * np.exp(c)
-
-
-@pytest.fixture
 def gen_case_exp(
         a:float, b:float, c:float,
-        a_b:float, a_b_exp_c:float,
-        a_bb:float, a_bb_exp_c:float
+        a_b:float, a_bb:float,
     ) -> FUNCS:
     # load -----------------------------
     def load(x:np.ndarray) -> np.ndarray:
         return a*np.exp(-b*x + c)
 
+    a_b_exp_c = a_b * np.exp(c)
     # sfd ------------------------------
     def sfd(x:np.ndarray) -> np.ndarray:
         return (a_b_exp_c - a_b*np.exp(-b*x + c))
 
+    a_bb_exp_c = a_bb * np.exp(c)
     # bmd ------------------------------
     def bmd(x:np.ndarray) -> np.ndarray:
         return (a_b_exp_c*x - a_bb_exp_c + a_bb*np.exp(-b*x + c))
