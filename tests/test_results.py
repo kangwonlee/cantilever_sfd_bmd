@@ -191,20 +191,27 @@ def load_sfd_bmd(request, gen_case_const, gen_case_linear, gen_case_quadratic, g
     return request.param, d[request.param]
 
 
-def test_calculate_shear_force(load_sfd_bmd:Tuple[str, FUNCS], beam_length_m:float, x_m_array:np.ndarray):
-    # 1. Calculate expected SFD using analytical solutions (if possible)
-    name, (load_function, expected_sfd, _) = load_sfd_bmd
+@pytest.fixture
+def result_sfd(load_sfd_bmd:Tuple[str, FUNCS], beam_length_m:float, x_m_array:np.ndarray) -> np.ndarray:
+    _, (load_function, _, _) = load_sfd_bmd
+    return ba.calculate_shear_force(x_m_array, beam_length_m, load_function)
 
-    # 2. Calculate SFD using numerical integration
-    calculated_sfd = ba.calculate_shear_force(x_m_array, beam_length_m, load_function)
 
-    # 3. Assertions
+@pytest.fixture
+def expected_sfd(load_sfd_bmd:Tuple[str, FUNCS], x_m_array:np.ndarray) -> np.ndarray:
+    _, (_, f, _) = load_sfd_bmd
+    return f(x_m_array)
+
+
+def test_calculate_shear_force(load_sfd_bmd:Tuple[str, FUNCS], result_sfd:np.ndarray, expected_sfd:np.ndarray, x_m_array:np.ndarray):
+    name, _ = load_sfd_bmd
+
     try:
-        nt.assert_allclose(calculated_sfd, expected_sfd(x_m_array), rtol=1e-5, atol=1e-5)  # Adjust tolerances
+        nt.assert_allclose(result_sfd, expected_sfd, rtol=1e-5, atol=1e-5)  # Adjust tolerances
     except AssertionError as e:
         plt.clf()
-        plt.plot(x_m_array, calculated_sfd, label=f'{name}calculated_sfd')
-        plt.plot(x_m_array, expected_sfd(x_m_array), label=f'{name}expected_sfd')
+        plt.plot(x_m_array, result_sfd, label=f'{name}calculated_sfd')
+        plt.plot(x_m_array, expected_sfd, label=f'{name}expected_sfd')
         plt.legend(loc=0)
         plt.xlabel('x (m)')
         plt.ylabel('SFD (N)')
@@ -213,20 +220,27 @@ def test_calculate_shear_force(load_sfd_bmd:Tuple[str, FUNCS], beam_length_m:flo
         raise e
 
 
-def test_calculate_bending_moment(load_sfd_bmd:Tuple[str, FUNCS], beam_length_m:float, x_m_array:np.ndarray):
-    # 1. Calculate expected BMD using analytical solutions (if possible)
-    name, (load_function, _, expected_bmd) = load_sfd_bmd
+@pytest.fixture
+def result_bmd(load_sfd_bmd:Tuple[str, FUNCS], beam_length_m:float, x_m_array:np.ndarray) -> np.ndarray:
+    _, (load_function, _, _) = load_sfd_bmd
+    return ba.calculate_bending_moment(x_m_array, beam_length_m, load_function)
 
-    # 2. Calculate BMD using numerical integration
-    calculated_bmd = ba.calculate_bending_moment(x_m_array, beam_length_m, load_function)
 
-    # 3. Assertions
+@pytest.fixture
+def expected_bmd(load_sfd_bmd:Tuple[str, FUNCS], x_m_array:np.ndarray) -> np.ndarray:
+    _, (_, _, f) = load_sfd_bmd
+    return f(x_m_array)
+
+
+def test_calculate_bending_moment(load_sfd_bmd:Tuple[str, FUNCS], result_bmd:np.ndarray, expected_bmd:np.ndarray, x_m_array:np.ndarray):
+    name, _ = load_sfd_bmd
+
     try:
-        nt.assert_allclose(calculated_bmd, expected_bmd(x_m_array), rtol=1e-5, atol=1e-5)  # Adjust tolerances
+        nt.assert_allclose(result_bmd, expected_bmd, rtol=1e-5, atol=1e-5)  # Adjust tolerances
     except AssertionError as e:
         plt.clf()
-        plt.plot(x_m_array, calculated_bmd, label=f'{name} calculated_bmd')
-        plt.plot(x_m_array, expected_bmd(x_m_array), label=f'{name} expected_bmd')
+        plt.plot(x_m_array, result_bmd, label=f'{name} calculated_bmd')
+        plt.plot(x_m_array, expected_bmd, label=f'{name} expected_bmd')
         plt.legend(loc=0)
         plt.xlabel('x (m)')
         plt.ylabel('BMD (Nm)')
