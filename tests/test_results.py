@@ -203,6 +203,20 @@ def expected_sfd(load_sfd_bmd:Tuple[str, FUNCS], x_m_array:np.ndarray) -> np.nda
     return f(x_m_array)
 
 
+def test_sfd_type(result_sfd:np.ndarray):
+    assert isinstance(result_sfd, np.ndarray), (
+        f"Expected np.ndarray, but got {type(result_sfd)}\n"
+        f"numpy array 를 반환할 것을 예상했으나 {type(result_sfd)} 이(가) 반환됨"
+    )
+
+
+def test_sfd_shape(result_sfd:np.ndarray, x_m_array:np.ndarray):
+    assert result_sfd.shape == x_m_array.shape, (
+        f"Expected shape {x_m_array.shape}, but got {result_sfd.shape}\n"
+        f"반환된 array 길이가 {x_m_array.shape} 일 것으로 예상했지만 {result_sfd.shape} (으)로 반환됨"
+    )
+
+
 def test_calculate_shear_force(load_sfd_bmd:Tuple[str, FUNCS], result_sfd:np.ndarray, expected_sfd:np.ndarray, x_m_array:np.ndarray):
     name, _ = load_sfd_bmd
 
@@ -230,6 +244,20 @@ def result_bmd(load_sfd_bmd:Tuple[str, FUNCS], beam_length_m:float, x_m_array:np
 def expected_bmd(load_sfd_bmd:Tuple[str, FUNCS], x_m_array:np.ndarray) -> np.ndarray:
     _, (_, _, f) = load_sfd_bmd
     return f(x_m_array)
+
+
+def test_bmd_type(result_bmd:np.ndarray):
+    assert isinstance(result_bmd, np.ndarray), (
+        f"Expected np.ndarray, but got {type(result_bmd)}\n"
+        f"numpy array 를 반환할 것을 예상했으나 {type(result_bmd)} 이(가) 반환됨"
+    )
+
+
+def test_bmd_shape(result_bmd:np.ndarray, x_m_array:np.ndarray):
+    assert result_bmd.shape == x_m_array.shape, (
+        f"Expected shape {x_m_array.shape}, but got {result_sfd.shape}\n"
+        f"반환된 array 길이가 {x_m_array.shape} 일 것으로 예상했지만 {result_sfd.shape} (으)로 반환됨"
+    )
 
 
 def test_calculate_bending_moment(load_sfd_bmd:Tuple[str, FUNCS], result_bmd:np.ndarray, expected_bmd:np.ndarray, x_m_array:np.ndarray):
