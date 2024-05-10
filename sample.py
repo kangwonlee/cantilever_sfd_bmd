@@ -2,33 +2,47 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-import numerical_integration
+import beam_analysis as beam
+
+
+def w_Npm(x_m):
+    # constant distributed load function
+    # 균일 분포 하중 함수
+    # q(x) = 1000.0 N/m
+    return 1000.0 * np.ones_like(x_m)
+
+# if interested, please try other functions
+# 관심이 있다면 다른 함수를 시도해보세요
 
 
 def sample_main():
-    x_begin = 0
-    x_end_array = np.logspace(-1, 1)
+    x_begin_m = 0.0
+    x_end_m = 3.0
 
-    area_list = []
+    x_m_array = np.linspace(x_begin_m, x_end_m)
 
-    for x_end in x_end_array:
+    # calculate SFD and BMD
+    sfd = beam.calculate_shear_force(
+        x_m_array, x_end_m, w_Npm
+    )
 
-        n = max(int(x_end - x_begin) * 10, 10)
+    bmd = beam.calculate_shear_force(
+        x_m_array, x_end_m, w_Npm
+    )
 
-        result_2 = numerical_integration.gauss_int_2(x_begin, x_end, n)
+    # plot SFD and BMD
+    plt.subplot(2, 1, 1)
+    plt.plot(x_m_array, sfd, label='SFD')
+    plt.title('SFD (N)')
+    plt.grid()
 
-        area_list.append(result_2['area_2'])
+    plt.subplot(2, 1, 2)
+    plt.plot(x_m_array, bmd, label='BMD')
+    plt.title('BMD (Nm)')
+    plt.xlabel('x (m)')
+    plt.grid()
 
-    area_array = np.array(area_list)
-    going_where = (area_array * 2) ** 2
-
-    plt.clf()
-
-    plt.semilogx(x_end_array, going_where)
-    plt.xlabel('integration range end point')
-    plt.title(r'$\left(2\int_0^{x_e} exp(-x^2)dx\right)^2$')
-    plt.grid(True)
-    plt.savefig('sample.png')
+    plt.savefig('result.png')
 
 
 if "__main__" == __name__:
