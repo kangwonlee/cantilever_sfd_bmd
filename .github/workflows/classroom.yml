@@ -37,3 +37,12 @@ jobs:
       # ADDITION-TEST_RESULTS: "${{ steps.addition - test.outputs.result }}"
       #     with:
       #         runners: addition-test
+    - name: upload pngs as artifacts
+      id: png-artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: plots
+        path: ./*.png
+        retention-days: 21
+        overwrite: true
