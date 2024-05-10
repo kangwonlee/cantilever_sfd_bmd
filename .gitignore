@@ -115,3 +115,5 @@ temp/
 plot.png
 
 .DS_Store
+
+*.png
