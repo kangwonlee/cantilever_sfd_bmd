@@ -126,33 +126,27 @@ def gen_case_quadratic(
 
 
 @pytest.fixture
-def a_b(a:float, b:float) -> float:
-    return a/b
-
-
-@pytest.fixture
-def a_bb(a:float, b:float) -> float:
-    return a/(b*b)
-
-
-@pytest.fixture
 def gen_case_sinusoidal(
         a:float, b:float, c:float,
-        a_b:float, a_bb:float,
+        beam_length_m:float,
     ) -> FUNCS:
+    freq = (2*np.pi*b)/beam_length_m
+
     # load -----------------------------
     def load(x:np.ndarray) -> np.ndarray:
-        return a*np.sin(b*x + c)
+        return a*np.sin(freq*x + c)
 
-    a_b_cos_c = a_b * np.cos(c)
+    a_freq = a/freq
+    a_freq_cos_c = a_freq * np.cos(c)
     # sfd ------------------------------
     def sfd(x:np.ndarray) -> np.ndarray:
-        return (a_b_cos_c - a_b*np.cos(b*x + c))
+        return (a_freq_cos_c - a_freq*np.cos(freq*x + c))
 
-    a_bb_sin_c = a_bb * np.sin(c)
+    a_freq2 = a/(freq*freq)
+    a_freq2_sin_c = a_freq2 * np.sin(c)
     # bmd ------------------------------
     def bmd(x:np.ndarray) -> np.ndarray:
-        return (a_b_cos_c*x + a_bb_sin_c - a_bb*np.sin(b*x + c))
+        return (a_freq_cos_c*x + a_freq2_sin_c - a_freq2*np.sin(freq*x + c))
 
     return load, sfd, bmd
 
@@ -160,12 +154,13 @@ def gen_case_sinusoidal(
 @pytest.fixture
 def gen_case_exp(
         a:float, b:float, c:float,
-        a_b:float, a_bb:float,
     ) -> FUNCS:
     # load -----------------------------
     def load(x:np.ndarray) -> np.ndarray:
         return a*np.exp(-b*x + c)
 
+    a_b = a/b
+    a_bb = a/(b*b)
     a_b_exp_c = a_b * np.exp(c)
     # sfd ------------------------------
     def sfd(x:np.ndarray) -> np.ndarray:
