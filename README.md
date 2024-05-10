@@ -49,6 +49,8 @@ $$
 
 * Please see `sample.py` file for an example.<br>사용 예에 대해서는 `sample.py` 파일을 참고하시오.
 * In `beam_analysis.py` file, every python code line must belong to one of functions.<br>`beam_analysis.py` 파일에서 모든 파이썬 코드 라인은 반드시 함수 중 하나에 속해야 함.
+* Students may use `numpy`, `scipy`, or `matplotlib` for this assignment.<br>이 과제에서는 `numpy`, `scipy`, `matplotlib` 라이브러리를 사용할 수 있음.
+
 
 ## Grading<br>평가
 
