@@ -1,227 +1,276 @@
-import math
-import pathlib
 import random
+import pathlib
 import sys
+from typing import Tuple, Callable
 
 
-from typing import Callable, Dict, Union
-
-
+import matplotlib.pyplot as plt
 import numpy as np
 import numpy.testing as nt
 import pytest
 
-
-RESULT = Dict[str, Union[float, np.ndarray]]
-METHOD = Callable[[float, float, int], RESULT]
-TABLE = Dict[str, np.array]
+sys.path.insert(0, str(pathlib.Path(__file__).parent.parent.absolute()))
 
 
-file_path = pathlib.Path(__file__)
-test_folder = file_path.parent.absolute()
-proj_folder = test_folder.parent.absolute()
+# Import the functions you'll be testing from your beam_analysis module
+import beam_analysis as ba
 
 
-sys.path.insert(0, str(proj_folder))
+SFD = Callable[[float], float]
+BMD = Callable[[float], float]
+LOAD = Callable[[float], float]
 
-
-import numerical_integration
-
-
-random.seed()
+FUNCS = Tuple[LOAD, SFD, BMD]
 
 
 @pytest.fixture
-def x_begin() -> float:
-    return random.uniform(1e-7, 1e-5)
-
-
-@pytest.fixture
-def x_end() -> float:
-    return random.uniform(1, 5)
+def beam_length_m() -> float:
+    return random.uniform(0.1, 2)  # Sample beam length
 
 
 @pytest.fixture
 def n_interval() -> int:
-    '''
-    number of numerical integration intervals
-    '''
-    return random.randint(10, 50) * 2
+    return random.randint(100, 200) * 2
 
 
 @pytest.fixture
-def x_array(x_begin, x_end, n_interval) -> np.array:
-    return np.linspace(x_begin, x_end, (n_interval + 1))
+def x_m_array(beam_length_m:float, n_interval:int) -> np.ndarray:
+    return np.linspace(0, beam_length_m, n_interval+1)  # Array of positions for calculation
 
 
 @pytest.fixture
-def f_array(x_array:np.array) -> np.array:
-    return np.exp(-1.0 * (x_array ** 2))
+def a() -> float:
+    return random.uniform(0.1, 2)
 
 
 @pytest.fixture
-def c_table(f_array:np.ndarray) -> TABLE:
-    return {
-        '0': f_array[:-1],
-        '1': np.array((1, 1)) @ np.vstack((f_array[:-1], f_array[1:])),
-        '2': np.array((1, 4, 1)) @ np.vstack((f_array[:-1:2], f_array[1::2], f_array[2::2])),
+def b() -> float:
+    return random.uniform(0.1, 2)
+
+
+@pytest.fixture
+def c() -> float:
+    return random.uniform(0.1, 2)
+
+
+@pytest.fixture
+def half_a(a:float) -> float:
+    return 0.5*a
+
+
+@pytest.fixture
+def a_third(a:float) -> float:
+    return (1.0/3.0)*a
+
+
+@pytest.fixture
+def a_sixth(a:float) -> float:
+    return (1.0/6.0)*a
+
+
+@pytest.fixture
+def a_twelfth(a:float) -> float:
+    return (1.0/12.0)*a
+
+
+@pytest.fixture
+def half_b(b:float) -> float:
+    return 0.5*b
+
+
+@pytest.fixture
+def b_sixth(b:float) -> float:
+    return (1.0/6.0)*b
+
+
+@pytest.fixture
+def half_c(c:float) -> float:
+    return 0.5*c
+
+
+@pytest.fixture
+def gen_case_const(a:float) -> FUNCS:
+    # load -----------------------------
+    def load(x:np.ndarray) -> np.ndarray:
+        return a * np.ones_like(x)
+
+    # sfd ------------------------------
+    def sfd(x:np.ndarray) -> np.ndarray:
+        return a*x
+
+    # bmd ------------------------------
+    def bmd(x:np.ndarray) -> np.ndarray:
+        return (0.5)*a*(x**2)
+    return load, sfd, bmd
+
+
+@pytest.fixture
+def gen_case_linear(
+        a:float, b:float, half_a:float,
+        half_b:float, a_sixth:float
+    ) -> FUNCS:
+    # load -----------------------------
+    def load(x:np.ndarray) -> np.ndarray:
+        return a*x + b
+
+    # sfd ------------------------------
+    def sfd(x:np.ndarray) -> np.ndarray:
+        return half_a*(x**2) + b*x
+
+    # bmd ------------------------------
+    def bmd(x:np.ndarray) -> np.ndarray:
+        return a_sixth*(x**3) + half_b*(x**2)
+
+    return load, sfd, bmd
+
+
+@pytest.fixture
+def gen_case_quadratic(
+        a:float, b:float, c:float,
+        a_third:float, half_b:float, b_sixth:float,
+        a_twelfth:float, half_c:float
+    ) -> FUNCS:
+    # load -----------------------------
+    def load(x:np.ndarray) -> np.ndarray:
+        return a*(x**2) + b*x + c
+
+    # sfd ------------------------------
+    def sfd(x:np.ndarray) -> np.ndarray:
+        return a_third*(x**3) + half_b*(x**2) + c*x
+
+    # bmd ------------------------------
+    def bmd(x:np.ndarray) -> np.ndarray:
+        return a_twelfth*(x**4) + b_sixth*(x**3) + half_c*(x**2)
+    return load, sfd, bmd
+
+
+@pytest.fixture
+def a_b(a:float, b:float) -> float:
+    return a/b
+
+
+@pytest.fixture
+def a_bb(a:float, b:float) -> float:
+    return a/(b*b)
+
+
+@pytest.fixture
+def a_b_cos_c(a_b:float, c:float) -> float:
+    return a_b * np.cos(c)
+
+
+@pytest.fixture
+def a_bb_sin_c(a_bb:float,c:float) -> float:
+    return a_bb * np.sin(c)
+
+
+@pytest.fixture
+def gen_case_sinusoidal(
+        a:float, b:float, c:float,
+        a_b:float, a_bb:float,
+        a_b_cos_c:float, a_bb_sin_c:float,
+    ) -> FUNCS:
+    # load -----------------------------
+    def load(x:np.ndarray) -> np.ndarray:
+        return a*np.sin(b*x + c)
+
+    # sfd ------------------------------
+    def sfd(x:np.ndarray) -> np.ndarray:
+        return (a_b_cos_c - a_b*np.cos(b*x + c))
+
+    # bmd ------------------------------
+    def bmd(x:np.ndarray) -> np.ndarray:
+        return (a_b_cos_c*x + a_bb_sin_c - a_bb*np.sin(b*x + c))
+
+    return load, sfd, bmd
+
+
+@pytest.fixture
+def a_b_exp_c(a_b:float, c:float) -> float:
+    return a_b * np.exp(c)
+
+
+@pytest.fixture
+def a_bb_exp_c(a_bb:float, c:float) -> float:
+    return a_bb * np.exp(c)
+
+
+@pytest.fixture
+def gen_case_exp(
+        a:float, b:float, c:float,
+        a_b:float, a_b_exp_c:float,
+        a_bb:float, a_bb_exp_c:float
+    ) -> FUNCS:
+    # load -----------------------------
+    def load(x:np.ndarray) -> np.ndarray:
+        return a*np.exp(-b*x + c)
+
+    # sfd ------------------------------
+    def sfd(x:np.ndarray) -> np.ndarray:
+        return (a_b_exp_c - a_b*np.exp(-b*x + c))
+
+    # bmd ------------------------------
+    def bmd(x:np.ndarray) -> np.ndarray:
+        return (a_b_exp_c*x - a_bb_exp_c + a_bb*np.exp(-b*x + c))
+
+    return load, sfd, bmd
+
+
+@pytest.fixture(params=['const', 'linear', 'quadratic', 'sinusoidal', 'exp'])
+def load_sfd_bmd(request, gen_case_const, gen_case_linear, gen_case_quadratic, gen_case_sinusoidal, gen_case_exp) -> Tuple[str, FUNCS]:
+    d = {
+        'const': gen_case_const,
+        'linear': gen_case_linear,
+        'quadratic': gen_case_quadratic,
+        'sinusoidal': gen_case_sinusoidal,
+        'exp': gen_case_exp,
     }
+    return request.param, d[request.param]
 
 
-@pytest.fixture
-def delta_x(x_array:np.ndarray) -> float:
-    return x_array[1] - x_array[0]
+def test_calculate_shear_force(load_sfd_bmd:Tuple[str, FUNCS], beam_length_m:float, x_m_array:np.ndarray):
+    # 1. Calculate expected SFD using analytical solutions (if possible)
+    name, (load_function, expected_sfd, _) = load_sfd_bmd
+
+    # 2. Calculate SFD using numerical integration
+    calculated_sfd = ba.calculate_shear_force(x_m_array, beam_length_m, load_function)
+
+    # 3. Assertions
+    try:
+        nt.assert_allclose(calculated_sfd, expected_sfd(x_m_array), rtol=1e-5, atol=1e-5)  # Adjust tolerances
+    except AssertionError as e:
+        plt.clf()
+        plt.plot(x_m_array, calculated_sfd, label=f'{name}calculated_sfd')
+        plt.plot(x_m_array, expected_sfd(x_m_array), label=f'{name}expected_sfd')
+        plt.legend(loc=0)
+        plt.xlabel('x (m)')
+        plt.ylabel('SFD (N)')
+        plt.grid(True)
+        plt.savefig(name+'.png')
+        raise e
 
 
-@pytest.fixture(params=[numerical_integration.gauss_int_2])
-def int_method(request):
-    return request.param
+def test_calculate_bending_moment(load_sfd_bmd:Tuple[str, FUNCS], beam_length_m:float, x_m_array:np.ndarray):
+    # 1. Calculate expected BMD using analytical solutions (if possible)
+    name, (load_function, _, expected_bmd) = load_sfd_bmd
 
+    # 2. Calculate BMD using numerical integration
+    calculated_bmd = ba.calculate_bending_moment(x_m_array, beam_length_m, load_function)
 
-@pytest.fixture
-def method_number(int_method:METHOD) -> str:
-    return int_method.__name__[-1]
-
-
-@pytest.fixture
-def c_array(c_table:TABLE, method_number:str) -> np.array:
-    return c_table[method_number]
-
-
-@pytest.fixture
-def division(method_number:np.ndarray, delta_x:float) -> float:
-    return (int(method_number) + 1) / delta_x
-
-
-@pytest.fixture
-def result_dict(int_method:METHOD, x_begin:float, x_end:float, n_interval:int) -> RESULT:
-    return int_method(x_begin, x_end, n_interval)
-
-
-@pytest.fixture
-def int_function_name(method_number:str) -> str:
-    return f"gauss_int_{method_number}()"
-
-
-def test_result_type(result_dict:RESULT, int_function_name:str):
-    assert isinstance(result_dict, dict), (
-        f"{int_function_name} returned result is not a `dict`\n"
-        f"{int_function_name} 반환 결과가 `dict`가 아님\n"
-        f"{result_dict}"
-    )
-
-
-@pytest.fixture(params=["a_array", "area"])
-def dict_key_prefix(request) -> str:
-    return request.param
-
-
-@pytest.fixture
-def dict_value_type(dict_key_prefix) -> type:
-    return {
-        "a_array": np.ndarray,
-        "area": float,
-    }[dict_key_prefix]
-
-
-def test_result_has_key(result_dict:RESULT, dict_key_prefix:str, method_number:str, int_function_name:str):
-    dict_key = '_'.join((dict_key_prefix, method_number))
-
-    assert dict_key in result_dict, (
-        f"{int_function_name} returned result without `{dict_key}`\n"
-        f"{int_function_name} 반환값에 `{dict_key}`가 없음\n"
-        f"{result_dict}"
-    )
-
-
-@pytest.fixture
-def result_a_array(result_dict:RESULT, method_number:str) -> np.ndarray:
-    return result_dict[f'a_array_{method_number}']
-
-
-@pytest.fixture
-def result_area(result_dict:RESULT, method_number:str) -> float:
-    return result_dict[f'area_{method_number}']
-
-
-@pytest.fixture
-def a_array_key(method_number:str) -> str:
-    return 'a_array_' + method_number
-
-
-@pytest.fixture
-def area_key(method_number:str) -> str:
-    return 'area_' + method_number
-
-
-def test_a_array_type(result_a_array:np.ndarray, int_function_name:str, a_array_key:str):
-    assert isinstance(result_a_array, np.ndarray,), (
-        f"{int_function_name} returned result '{a_array_key}' is not an instance of `np.ndarray`\n"
-        f"{int_function_name} 반환 결과 '{a_array_key}' 가 `np.ndarray`가 아님\n"
-        f"{result_a_array}"
-    )
-
-
-@pytest.fixture
-def expected_number_of_areas(method_number:str, n_interval:int) -> int:
-    '''
-    expected number of areas of numerical integration
-    '''
-    if method_number in '01':
-        expected_len = (n_interval)
-    elif method_number == '2':
-        assert n_interval % 2 == 0
-        expected_len = (n_interval // 2)
-    else:
-        raise NotImplementedError
-
-    return expected_len
-
-
-def test_a_array_dim(result_a_array:np.ndarray, expected_number_of_areas:int, int_function_name:str, a_array_key:str):
-    assert len(result_a_array) == (expected_number_of_areas), (
-        f"{int_function_name} returned result '{a_array_key}' has {len(result_a_array)} areas. expected {expected_number_of_areas}\n"
-        f"{int_function_name} 반환 결과 '{a_array_key}' 에 {len(result_a_array)} 개의 넓이가 저장됨. 예상 갯수 {expected_number_of_areas}\n"
-        f"{result_a_array}"
-    )
-
-
-def test_area_type(result_area:float, int_function_name:str, area_key:str):
-    assert isinstance(result_area, float), (
-        f"{int_function_name} returned result '{area_key}' is not an instance of `float`\n"
-        f"{int_function_name} 반환 결과 '{area_key}'가 `float`가 아님\n"
-        f"{result_area}"
-    )
-
-
-def test_a_array_value(
-        int_function_name:str, result_a_array:np.ndarray, c_array:np.array, division:float,
-        x_begin:float, x_end:float, n_interval:int
-    ):
-    q = result_a_array * division
-
-    nt.assert_allclose(
-        actual=q, desired=c_array,
-        err_msg=(
-            f'{int_function_name} : please verify the area of at each coordinate\n'
-            f'{int_function_name} : 각각의 좌표값에서 넓이 계산을 확인 바랍니다\n'
-            f'({x_begin} ~ {x_end}, {n_interval} intervals)'
-        )
-    )
-
-
-def test_area_value(
-        int_function_name:str, result_area:float, c_array:np.array, division:float,
-        x_begin:float, x_end:float, n_interval:int
-    ):
-    q = result_area * division
-    expected_q = np.sum(c_array)
-
-    assert math.isclose(q, expected_q), (
-        f"{int_function_name} : please verify numerical integration result\n"
-        f"{int_function_name} : 적분 결과를 확인 바랍니다\n"
-        f"({x_begin} ~ {x_end}, {n_interval} intervals) result = {result_area}"
-    )
+    # 3. Assertions
+    try:
+        nt.assert_allclose(calculated_bmd, expected_bmd(x_m_array), rtol=1e-5, atol=1e-5)  # Adjust tolerances
+    except AssertionError as e:
+        plt.clf()
+        plt.plot(x_m_array, calculated_bmd, label=f'{name} calculated_bmd')
+        plt.plot(x_m_array, expected_bmd(x_m_array), label=f'{name} expected_bmd')
+        plt.legend(loc=0)
+        plt.xlabel('x (m)')
+        plt.ylabel('BMD (Nm)')
+        plt.grid(True)
+        plt.savefig(name+'.png')
+        plt.close()
+        raise e
 
 
 if "__main__" == __name__:
