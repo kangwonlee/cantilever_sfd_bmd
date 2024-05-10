@@ -180,7 +180,12 @@ def gen_case_exp(
 
 
 @pytest.fixture(params=['const', 'linear', 'quadratic', 'sinusoidal', 'exp'])
-def load_sfd_bmd(request, gen_case_const, gen_case_linear, gen_case_quadratic, gen_case_sinusoidal, gen_case_exp) -> Tuple[str, FUNCS]:
+def load_function_type(request) -> str:
+    return request.param
+
+
+@pytest.fixture
+def load_sfd_bmd(load_function_type, gen_case_const, gen_case_linear, gen_case_quadratic, gen_case_sinusoidal, gen_case_exp) -> FUNCS:
     d = {
         'const': gen_case_const,
         'linear': gen_case_linear,
@@ -188,19 +193,17 @@ def load_sfd_bmd(request, gen_case_const, gen_case_linear, gen_case_quadratic, g
         'sinusoidal': gen_case_sinusoidal,
         'exp': gen_case_exp,
     }
-    return request.param, d[request.param]
+    return d[load_function_type]
 
 
 @pytest.fixture
-def result_sfd(load_sfd_bmd:Tuple[str, FUNCS], beam_length_m:float, x_m_array:np.ndarray) -> np.ndarray:
-    _, (load_function, _, _) = load_sfd_bmd
-    return ba.calculate_shear_force(x_m_array, beam_length_m, load_function)
+def result_sfd(load_sfd_bmd:FUNCS, beam_length_m:float, x_m_array:np.ndarray) -> np.ndarray:
+    return ba.calculate_shear_force(x_m_array, beam_length_m, load_sfd_bmd[0])
 
 
 @pytest.fixture
-def expected_sfd(load_sfd_bmd:Tuple[str, FUNCS], x_m_array:np.ndarray) -> np.ndarray:
-    _, (_, f, _) = load_sfd_bmd
-    return f(x_m_array)
+def expected_sfd(load_sfd_bmd:FUNCS, x_m_array:np.ndarray) -> np.ndarray:
+    return load_sfd_bmd[1](x_m_array)
 
 
 def test_sfd_type(result_sfd:np.ndarray):
@@ -217,33 +220,29 @@ def test_sfd_shape(result_sfd:np.ndarray, x_m_array:np.ndarray):
     )
 
 
-def test_calculate_shear_force(load_sfd_bmd:Tuple[str, FUNCS], result_sfd:np.ndarray, expected_sfd:np.ndarray, x_m_array:np.ndarray):
-    name, _ = load_sfd_bmd
-
+def test_calculate_shear_force(load_function_type:str, result_sfd:np.ndarray, expected_sfd:np.ndarray, x_m_array:np.ndarray):
     try:
         nt.assert_allclose(result_sfd, expected_sfd, rtol=1e-5, atol=1e-5)  # Adjust tolerances
     except AssertionError as e:
         plt.clf()
-        plt.plot(x_m_array, result_sfd, label=f'{name}calculated_sfd')
-        plt.plot(x_m_array, expected_sfd, label=f'{name}expected_sfd')
+        plt.plot(x_m_array, result_sfd, label=f'{load_function_type}calculated_sfd')
+        plt.plot(x_m_array, expected_sfd, label=f'{load_function_type}expected_sfd')
         plt.legend(loc=0)
         plt.xlabel('x (m)')
         plt.ylabel('SFD (N)')
         plt.grid(True)
-        plt.savefig(name+'.png')
+        plt.savefig(load_function_type+'.png')
         raise e
 
 
 @pytest.fixture
-def result_bmd(load_sfd_bmd:Tuple[str, FUNCS], beam_length_m:float, x_m_array:np.ndarray) -> np.ndarray:
-    _, (load_function, _, _) = load_sfd_bmd
-    return ba.calculate_bending_moment(x_m_array, beam_length_m, load_function)
+def result_bmd(load_sfd_bmd:FUNCS, beam_length_m:float, x_m_array:np.ndarray) -> np.ndarray:
+    return ba.calculate_bending_moment(x_m_array, beam_length_m, load_sfd_bmd[0])
 
 
 @pytest.fixture
 def expected_bmd(load_sfd_bmd:Tuple[str, FUNCS], x_m_array:np.ndarray) -> np.ndarray:
-    _, (_, _, f) = load_sfd_bmd
-    return f(x_m_array)
+    return load_sfd_bmd[2](x_m_array)
 
 
 def test_bmd_type(result_bmd:np.ndarray):
@@ -260,20 +259,18 @@ def test_bmd_shape(result_bmd:np.ndarray, x_m_array:np.ndarray):
     )
 
 
-def test_calculate_bending_moment(load_sfd_bmd:Tuple[str, FUNCS], result_bmd:np.ndarray, expected_bmd:np.ndarray, x_m_array:np.ndarray):
-    name, _ = load_sfd_bmd
-
+def test_calculate_bending_moment(load_function_type:str, result_bmd:np.ndarray, expected_bmd:np.ndarray, x_m_array:np.ndarray):
     try:
         nt.assert_allclose(result_bmd, expected_bmd, rtol=1e-5, atol=1e-5)  # Adjust tolerances
     except AssertionError as e:
         plt.clf()
-        plt.plot(x_m_array, result_bmd, label=f'{name} calculated_bmd')
-        plt.plot(x_m_array, expected_bmd, label=f'{name} expected_bmd')
+        plt.plot(x_m_array, result_bmd, label=f'{load_function_type} calculated_bmd')
+        plt.plot(x_m_array, expected_bmd, label=f'{load_function_type} expected_bmd')
         plt.legend(loc=0)
         plt.xlabel('x (m)')
         plt.ylabel('BMD (Nm)')
         plt.grid(True)
-        plt.savefig(name+'.png')
+        plt.savefig(load_function_type+'.png')
         plt.close()
         raise e
 
