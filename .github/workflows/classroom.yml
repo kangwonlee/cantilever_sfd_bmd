@@ -54,7 +54,7 @@ jobs:
       with:
         test-name: check grammar
         setup-command: ". test-env/bin/activate && echo $VIRTUAL_ENV && python -m pip list"
-        command: ". test-env/bin/activate && python -m pytest tests/test_grammar.py"
+        command: ". test-env/bin/activate && python -m pytest --json-report --json-report-file=report_grammar.json tests/test_grammar.py"
         timeout: 1
         max-score: 2
 
@@ -64,7 +64,7 @@ jobs:
       with:
         test-name: all lines in the function
         setup-command: ". test-env/bin/activate && echo $VIRTUAL_ENV && python -m pip list"
-        command: ". test-env/bin/activate && python -m pytest tests/test_all_lines_in_the_function.py"
+        command: ". test-env/bin/activate && python -m pytest --json-report --json-report-file=report_lines.json tests/test_all_lines_in_the_function.py"
         timeout: 1
         max-score: 1
 
@@ -74,7 +74,7 @@ jobs:
       with:
         test-name: test result
         setup-command: ". test-env/bin/activate && echo $VIRTUAL_ENV && python -m pip list"
-        command: ". test-env/bin/activate && python -m pytest -n auto tests/test_results.py"
+        command: ". test-env/bin/activate && python -m pytest -n auto --json-report --json-report-file=report_results.json tests/test_results.py"
         timeout: 2
         max-score: 2
 
@@ -94,5 +94,15 @@ jobs:
       with:
         name: plots
         path: ./*.png
+        retention-days: 21
+        overwrite: true
+
+    - name: upload json reports as artifacts
+      id: json-artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: reports
+        path: ./*.json
         retention-days: 21
         overwrite: true
