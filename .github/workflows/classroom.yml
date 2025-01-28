@@ -71,7 +71,7 @@ jobs:
       with:
         test-name: style
         setup-command: ". test-env/bin/activate && echo $VIRTUAL_ENV && python -m pip list"
-        command: ". test-env/bin/activate && python -m pytest tests/test_all_lines_in_the_function.py"
+        command: ". test-env/bin/activate && python -m pytest tests/test_style.py"
         timeout: 1
         max-score: 1
 
