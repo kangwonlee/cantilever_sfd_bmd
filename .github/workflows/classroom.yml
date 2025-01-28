@@ -48,6 +48,13 @@ jobs:
         echo $VIRTUAL_ENV
         pip install -r requirements.txt
 
+    - name: Set report file names
+      id: json
+      run: |
+        echo "syntax=report_syntax.json" >> $GITHUB_OUTPUT
+        echo "style=report_style.json" >> $GITHUB_OUTPUT
+        echo "results=report_results.json" >> $GITHUB_OUTPUT
+
     - name: check syntax
       id: check-syntax
       uses: classroom-resources/autograding-command-grader@v1
