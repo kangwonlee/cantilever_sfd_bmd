@@ -48,13 +48,13 @@ jobs:
         echo $VIRTUAL_ENV
         pip install -r requirements.txt
 
-    - name: check grammar
-      id: check-grammar
+    - name: check syntax
+      id: check-syntax
       uses: classroom-resources/autograding-command-grader@v1
       with:
-        test-name: check grammar
+        test-name: check syntax
         setup-command: ". test-env/bin/activate && echo $VIRTUAL_ENV && python -m pip list"
-        command: ". test-env/bin/activate && python -m pytest tests/test_grammar.py"
+        command: ". test-env/bin/activate && python -m pytest tests/test_syntax.py"
         timeout: 1
         max-score: 2
 
@@ -81,11 +81,11 @@ jobs:
     - name: Autograding Reporter
       uses: classroom-resources/autograding-grading-reporter@v1
       env:
-        CHECK-GRAMMAR_RESULTS: "${{steps.check-grammar.outputs.result}}"
+        CHECK-SYNTAX_RESULTS: "${{steps.check-syntax.outputs.result}}"
         ALL-LINES-IN-THE-FUNCTION_RESULTS: "${{steps.all-lines-in-the-function.outputs.result}}"
         TEST-RESULT_RESULTS: "${{steps.test-result.outputs.result}}"
       with:
-        runners: check-grammar,all-lines-in-the-function,test-result
+        runners: check-syntax,all-lines-in-the-function,test-result
 
     - name: upload pngs as artifacts
       id: png-artifacts

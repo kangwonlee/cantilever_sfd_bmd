@@ -15,7 +15,7 @@ logger = logging.getLogger(__file__)
 logger.setLevel(logging.INFO)
 
 
-def test_grammar(py_file:pathlib.Path):
+def test_syntax(py_file:pathlib.Path):
 
     code = py_file.read_text(encoding="utf-8")
 
