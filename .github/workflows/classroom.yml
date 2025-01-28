@@ -61,7 +61,7 @@ jobs:
       with:
         test-name: check syntax
         setup-command: ". test-env/bin/activate && echo $VIRTUAL_ENV && python -m pip list"
-        command: ". test-env/bin/activate && python -m pytest tests/test_syntax.py"
+        command: ". test-env/bin/activate && python -m pytest --json-report --json-report-indent=4 --json-report-file=${{ steps.json.outputs.syntax }} tests/test_syntax.py"
         timeout: 1
         max-score: 2
 
