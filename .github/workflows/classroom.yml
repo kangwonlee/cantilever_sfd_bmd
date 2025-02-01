@@ -94,6 +94,18 @@ jobs:
       with:
         runners: check-syntax,check-style,test-result
 
+    - name: AI Tutor
+      uses: kangwonlee/gemini-python-tutor@main
+      with:
+        report-files: ${{ steps.json.outputs.results }},${{ steps.json.outputs.syntax }},${{ steps.json.outputs.style }}
+        student-files: exercise.py
+        readme-path: README.md
+        api-key: ${{ secrets.GOOGLE_API_KEY }}
+        explanation-in: Korean
+      id: ai-tutor
+      if: always()
+      timeout-minutes: 2
+
     - name: upload pngs as artifacts
       id: png-artifacts
       uses: actions/upload-artifact@v4
