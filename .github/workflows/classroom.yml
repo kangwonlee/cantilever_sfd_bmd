@@ -71,7 +71,7 @@ jobs:
       with:
         test-name: style
         setup-command: ". test-env/bin/activate && echo $VIRTUAL_ENV && python -m pip list"
-        command: ". test-env/bin/activate && python -m pytest tests/test_style.py"
+        command: ". test-env/bin/activate && python -m pytest --json-report --json-report-indent=4 --json-report-file=${{ steps.json.outputs.style }} tests/test_style.py"
         timeout: 1
         max-score: 1
 
