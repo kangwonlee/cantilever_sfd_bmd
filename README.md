@@ -18,7 +18,7 @@ $$
 
 ## Implementation<br>구현
 
-* In `beam_analysis.py` file, please implement following python functions to calculate SFD and BMD numerically using appropriate integration methods.<br>`beam_analysis.py` 파일에 아래 파이썬 함수를 구현하여 SFD와 BMD를 수치적으로 계산하시오. 적절한 적분 방법을 사용하시오.
+* In `exercise.py` file, please implement following python functions to calculate SFD and BMD numerically using appropriate integration methods.<br>`exercise.py` 파일에 아래 파이썬 함수를 구현하여 SFD와 BMD를 수치적으로 계산하시오. 적절한 적분 방법을 사용하시오.
 
 
 | function<br>함수 | description<br>설명 |
@@ -48,7 +48,7 @@ $$
 | `calculate_bending_moment()` | the bending moment at `x_m_array`<br>`x_m_array` 위치에서 굽힘모멘트 | `numpy.array` | Nm |
 
 * Please see `sample.py` file for an example.<br>사용 예에 대해서는 `sample.py` 파일을 참고하시오.
-* In `beam_analysis.py` file, every python code line must belong to one of functions.<br>`beam_analysis.py` 파일에서 모든 파이썬 코드 라인은 반드시 함수 중 하나에 속해야 함.
+* In `exercise.py` file, every python code line must belong to one of functions.<br>`exercise.py` 파일에서 모든 파이썬 코드 라인은 반드시 함수 중 하나에 속해야 함.
 * Students may use `numpy`, `scipy`, or `matplotlib` for this assignment.<br>이 과제에서는 `numpy`, `scipy`, `matplotlib` 라이브러리를 사용할 수 있음.
 
 
@@ -57,7 +57,7 @@ $$
 |       | points<br>배점 |
 |:-----:|:-------------:|
 | Python Syntax<br>파이썬 문법 | 2 |
-| all lines of `beam_analysis.py` in the function<br>`beam_analysis.py` 파일에는 함수만 포함 | 1 |
+| all lines of `exercise.py` in the function<br>`exercise.py` 파일에는 함수만 포함 | 1 |
 | results<br>결과값 | 2 |
 
 ## Example<br>예
@@ -65,7 +65,7 @@ $$
 ```python
 import matplotlib.pyplot as plt
 import numpy as np
-import beam_analysis as beam
+import exercise as beam
 
 x_begin = 0.0
 x_end = 3.0

@@ -13,7 +13,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).parent.parent.absolute()))
 
 
 # Import the functions you'll be testing from your beam_analysis module
-import beam_analysis as ba
+import exercise
 
 
 SFD = Callable[[float], float]
@@ -193,7 +193,7 @@ def load_sfd_bmd(load_function_type, gen_case_const, gen_case_linear, gen_case_q
 
 @pytest.fixture
 def result_sfd(load_sfd_bmd:FUNCS, beam_length_m:float, x_m_array:np.ndarray) -> np.ndarray:
-    return ba.calculate_shear_force(x_m_array, beam_length_m, load_sfd_bmd[0])
+    return exercise.calculate_shear_force(x_m_array, beam_length_m, load_sfd_bmd[0])
 
 
 @pytest.fixture
@@ -232,7 +232,7 @@ def test_calculate_shear_force(load_function_type:str, result_sfd:np.ndarray, ex
 
 @pytest.fixture
 def result_bmd(load_sfd_bmd:FUNCS, beam_length_m:float, x_m_array:np.ndarray) -> np.ndarray:
-    return ba.calculate_bending_moment(x_m_array, beam_length_m, load_sfd_bmd[0])
+    return exercise.calculate_bending_moment(x_m_array, beam_length_m, load_sfd_bmd[0])
 
 
 @pytest.fixture

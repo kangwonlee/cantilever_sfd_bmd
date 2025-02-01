@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-import beam_analysis as beam
+import exercise
 
 
 def w_Npm(x_m):
@@ -22,11 +22,11 @@ def sample_main():
     x_m_array = np.linspace(x_begin_m, x_end_m)
 
     # calculate SFD and BMD
-    sfd = beam.calculate_shear_force(
+    sfd = exercise.calculate_shear_force(
         x_m_array, x_end_m, w_Npm
     )
 
-    bmd = beam.calculate_shear_force(
+    bmd = exercise.calculate_shear_force(
         x_m_array, x_end_m, w_Npm
     )
 

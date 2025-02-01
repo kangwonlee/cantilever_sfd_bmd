@@ -43,5 +43,5 @@ def test_module(py_file:pathlib.Path):
 
 
 def test_importable():
-    import beam_analysis
-    assert beam_analysis is not None
+    import exercise
+    assert exercise is not None
