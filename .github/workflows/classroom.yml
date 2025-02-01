@@ -89,7 +89,7 @@ jobs:
       uses: classroom-resources/autograding-grading-reporter@v1
       env:
         CHECK-SYNTAX_RESULTS: "${{steps.check-syntax.outputs.result}}"
-        CHECK-STYLE_RESULTS: "${{steps.style.outputs.result}}"
+        CHECK-STYLE_RESULTS: "${{steps.check-style.outputs.result}}"
         TEST-RESULT_RESULTS: "${{steps.test-result.outputs.result}}"
       with:
         runners: check-syntax,check-style,test-result
