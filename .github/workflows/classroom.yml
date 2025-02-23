@@ -83,7 +83,7 @@ jobs:
             --env INPUT_README-PATH="workspace/README.md" \
             --env INPUT_API-KEY="${{ secrets.GOOGLE_API_KEY }}" \
             --env INPUT_EXPLANATION-IN="Korean" \
-            ghcr.io/kangwonlee/edu-base:0.2.4 \
+            ghcr.io/kangwonlee/edu-scipy:0.2.4 \
             python3 ai_tutor/entrypoint.py
       timeout-minutes: 2
 
