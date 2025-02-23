@@ -17,26 +17,15 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Install uv
-      uses: astral-sh/setup-uv@v5
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
       with:
-        version: "latest"
-        enable-cache: true
-        cache-suffix: "uv"
-        cache-dependency-glob: "./requirements.txt"
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.CR_PAT }}
 
-    - name: Create and Activate Virtual Environment
-      run: |
-        uv venv test-env
-        source test-env/bin/activate
-        echo $VIRTUAL_ENV
-
-    - name: Setup test environment
-      id: setup-env
-      run: |
-        source test-env/bin/activate
-        echo $VIRTUAL_ENV
-        uv pip install -r requirements.txt
+    - name: Pull Docker Image
+      run: docker pull ghcr.io/kangwonlee/edu-scipy:0.2.4 # Pull your Docker image
 
     - name: Set report file names
       id: json
@@ -50,8 +39,8 @@ jobs:
       uses: classroom-resources/autograding-command-grader@v1
       with:
         test-name: check syntax
-        setup-command: ". test-env/bin/activate && echo $VIRTUAL_ENV && uv pip list"
-        command: ". test-env/bin/activate && python -m pytest --json-report --json-report-indent=4 --json-report-file=${{ steps.json.outputs.syntax }} tests/test_syntax.py"
+        setup-command: "docker run --rm --user 1001:1001 -v $(pwd):/app ghcr.io/kangwonlee/edu-scipy:0.2.4 python3 -m pip list"
+        command: "docker run --rm --user 1001:1001 -v $(pwd):/app ghcr.io/kangwonlee/edu-scipy:0.2.4 python3 -m pytest --json-report --json-report-indent=4 --json-report-file=/app/${{ steps.json.outputs.syntax }} tests/test_syntax.py"
         timeout: 1
         max-score: 2
 
@@ -59,19 +48,19 @@ jobs:
       id: check-style
       uses: classroom-resources/autograding-command-grader@v1
       with:
-        test-name: style
-        setup-command: ". test-env/bin/activate && echo $VIRTUAL_ENV && uv pip list"
-        command: ". test-env/bin/activate && python -m pytest --json-report --json-report-indent=4 --json-report-file=${{ steps.json.outputs.style }} tests/test_style.py"
+        test-name: check style
+        setup-command: "docker run --rm --user 1001:1001 -v $(pwd):/app ghcr.io/kangwonlee/edu-scipy:0.2.4 python3 -m pip list"
+        command: "docker run --rm --user 1001:1001 -v $(pwd):/app ghcr.io/kangwonlee/edu-scipy:0.2.4 python3 -m pytest --json-report --json-report-indent=4 --json-report-file=/app/${{ steps.json.outputs.style }} tests/test_style.py"
         timeout: 1
         max-score: 1
 
-    - name: test result
-      id: test-result
+    - name: test results
+      id: test-results
       uses: classroom-resources/autograding-command-grader@v1
       with:
-        test-name: test result
-        setup-command: ". test-env/bin/activate && echo $VIRTUAL_ENV && uv pip list"
-        command: ". test-env/bin/activate && python -m pytest -n auto --json-report --json-report-indent=4 --json-report-file=${{ steps.json.outputs.results }} tests/test_results.py"
+        test-name: test results
+        setup-command: "docker run --rm --user 1001:1001 -v $(pwd):/app ghcr.io/kangwonlee/edu-scipy:0.2.4 python3 -m pip list"
+        command: "docker run --rm --user 1001:1001 -v $(pwd):/app ghcr.io/kangwonlee/edu-scipy:0.2.4 python3 -m pytest -n auto --json-report --json-report-indent=4 --json-report-file=/app/${{ steps.json.outputs.results }} tests/test_results.py"
         timeout: 2
         max-score: 2
 
@@ -80,20 +69,22 @@ jobs:
       env:
         CHECK-SYNTAX_RESULTS: "${{steps.check-syntax.outputs.result}}"
         CHECK-STYLE_RESULTS: "${{steps.check-style.outputs.result}}"
-        TEST-RESULT_RESULTS: "${{steps.test-result.outputs.result}}"
+        TEST-RESULT_RESULTS: "${{steps.test-results.outputs.result}}"
       with:
-        runners: check-syntax,check-style,test-result
+        runners: check-syntax,check-style,test-results
 
     - name: AI Tutor
-      uses: docker://ghcr.io/kangwonlee/gemini-python-tutor:latest
-      with:
-        report-files: ${{ steps.json.outputs.results }},${{ steps.json.outputs.syntax }},${{ steps.json.outputs.style }}
-        student-files: exercise.py
-        readme-path: README.md
-        api-key: ${{ secrets.GOOGLE_API_KEY }}
-        explanation-in: Korean
       id: ai-tutor
       if: always()
+      run: |
+        docker run --rm --user 1001:1001 -v $(pwd):/app/workspace \
+            --env INPUT_REPORT-FILES="workspace/${{ steps.json.outputs.results }},workspace/${{ steps.json.outputs.syntax }},workspace/${{ steps.json.outputs.style }}" \
+            --env INPUT_STUDENT-FILES="workspace/exercise.py" \
+            --env INPUT_README-PATH="workspace/README.md" \
+            --env INPUT_API-KEY="${{ secrets.GOOGLE_API_KEY }}" \
+            --env INPUT_EXPLANATION-IN="Korean" \
+            ghcr.io/kangwonlee/edu-scipy:0.2.4 \
+            python3 ai_tutor/entrypoint.py
       timeout-minutes: 2
 
     - name: upload artifacts
