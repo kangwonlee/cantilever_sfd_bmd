@@ -1,6 +1,8 @@
+import os
 import random
 import pathlib
 import sys
+
 from typing import Tuple, Callable
 
 
@@ -9,7 +11,15 @@ import numpy as np
 import numpy.testing as nt
 import pytest
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent.parent.absolute()))
+sys.path.insert(
+    0,
+    os.getenv(
+        'STUDENT_CODE_FOLDER',
+        str(
+            pathlib.Path(__file__).parent.parent.absolute()
+        )
+    )
+)
 
 
 # Import the functions you'll be testing from your beam_analysis module
