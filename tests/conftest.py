@@ -1,3 +1,4 @@
+import os
 import pathlib
 
 from typing import Tuple
@@ -8,8 +9,7 @@ import pytest
 
 file_path = pathlib.Path(__file__)
 test_folder = file_path.parent.absolute()
-proj_folder = test_folder.parent.absolute()
-
+proj_folder = pathlib.Path(os.getenv('STUDENT_CODE_FOLDER', test_folder.parent.absolute()))
 
 
 def py_files() -> Tuple[pathlib.Path]:

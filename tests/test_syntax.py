@@ -1,13 +1,15 @@
 import ast
 import logging
+import os
 import pathlib
 import sys
 
 import pytest
 
+
 file_path = pathlib.Path(__file__)
 test_folder = file_path.parent.absolute()
-proj_folder = test_folder.parent.absolute()
+proj_folder = pathlib.Path(os.getenv('STUDENT_CODE_FOLDER',test_folder.parent.absolute()))
 
 sys.path.insert(0, str(proj_folder))
 
